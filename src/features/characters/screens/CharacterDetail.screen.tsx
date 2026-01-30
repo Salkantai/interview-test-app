@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import type { Character } from "@/core/models/character";
-import { apiGet } from "@/shared/api/client";
-import type { CharacterApi } from "@/shared/api/characters";
 import { ROUTES } from "@/router/routes";
-
-
+import { useCharacterDetailChar } from "../hooks/useCharacterDetailChar";
+import { useCharacterDetailEpisode } from "../hooks/useCharacterDetailEpisode";
 
 function getEpisodeIdFromUrl(url: string): number | null {
   const segment = url.split("/").filter(Boolean).pop();
@@ -18,94 +15,18 @@ export function CharacterDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const numId = id != null && id !== "" ? parseInt(id, 10) : null;
   const validId = numId != null && !Number.isNaN(numId) ? numId : null;
-
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [selectedEpisodeId, setSelectedEpisodeId] = useState<number | null>(null);
-  const [selectedEpisode, setSelectedEpisode] = useState<any>(null);
-  const [episodeLoading, setEpisodeLoading] = useState(false);
 
-  let characerName = "";
+  const { character, loading, error, setCharacterById } = useCharacterDetailChar();
+  const { selectedEpisode, episodeLoading, setSelectedEpisodeById } = useCharacterDetailEpisode();
 
   useEffect(() => {
-    if (selectedEpisodeId == null) {
-      setSelectedEpisode(null);
-      return;
-    }
-    setSelectedEpisode(null);
-    setEpisodeLoading(true);
-    apiGet(`/episode/${selectedEpisodeId}`)
-      .then((res) => setSelectedEpisode(res))
-      .finally(() => setEpisodeLoading(false));
+    setSelectedEpisodeById(selectedEpisodeId);
   }, [selectedEpisodeId]);
 
   useEffect(() => {
-    if (selectedEpisode != null) {
-      const t = setTimeout(() => setEpisodeLoading(true), 100);
-      return () => clearTimeout(t);
-    }
-  }, [selectedEpisode]);
-
-  useEffect(() => {
-    if (validId == null) return;
-    setLoading(true);
-    setError(null);
-    apiGet<CharacterApi>(`/character/${validId}`)
-      .then((res) => {
-        setCharacter({
-          ...res,
-          status: res.status,
-        } as Character);
-      })
-      .catch((e) => {
-        setError(e instanceof Error ? e : new Error("Unknown error"));
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    setCharacterById(validId);
   }, [validId]);
-
-  useEffect(() => {
-    if (validId == null) return;
-    setLoading(true);
-    setError(null);
-    apiGet<CharacterApi>(`/character/${validId}`)
-      .then((res) => {
-        setCharacter({
-          ...res,
-          status: res.status,
-        } as Character);
-      })
-      .catch((e) => {
-        setError(e instanceof Error ? e : new Error("Unknown error"));
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [validId]);
-
-  useEffect(() => {
-    if (validId == null) return;
-    setCharacter(null);
-    setError(null);
-  }, [validId]);
-
-  useEffect(() => {
-    if (character?.name != null) {
-      characerName = `${character.name} | Rick and Morty`;
-    }
-    return () => {
-      characerName = "Rick and Morty";
-    };
-  }, [character?.name]);
-
-  useEffect(() => {
-    if (character != null) {
-      setCharacter({ ...character });
-    }
-  }, [character]);
-
 
   if (validId == null) {
     return (
@@ -168,7 +89,7 @@ export function CharacterDetailScreen() {
           height={300}
         />
         <div className="character-detail-info">
-          <h1>{characerName}</h1>
+          <h1>{`${character.name} | Rick and Morty`}</h1>
           <p>
             {character.status} · {character.species} · {character.gender}
           </p>
