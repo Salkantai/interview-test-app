@@ -11,6 +11,13 @@ function getEpisodeIdFromUrl(url: string): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
+function getEpisodeIdFromUrl(url: string): number | null {
+  const segment = url.split('/').filter(Boolean).pop()
+  if (segment == null) return null
+  const n = parseInt(segment, 10)
+  return Number.isNaN(n) ? null : n
+}
+
 export function CharacterDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const numId = id != null && id !== "" ? parseInt(id, 10) : null;
@@ -39,8 +46,11 @@ export function CharacterDetailScreen() {
 
   if (loading) {
     return (
-      <div className="character-detail-screen" aria-busy="true">
-        <p>Loading…</p>
+      <div
+        className="character-detail-screen character-detail-screen--loading"
+        aria-busy="true"
+      >
+        <Spinner size="lg" aria-label="Loading character" />
       </div>
     );
   }
